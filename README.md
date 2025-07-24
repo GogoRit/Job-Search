@@ -21,18 +21,33 @@ An open-source, personal AI-powered job application assistant that helps you str
 ## 🏗️ Architecture
 
 - **Frontend**: React 18 + TypeScript + Vite + TailwindCSS + Radix UI
-- **Backend**: Express.js + TypeScript
-- **AI**: OpenAI GPT-4 integration
-- **Email**: Gmail API or SMTP support
-- **Database**: SQLite (default) with PostgreSQL/MySQL support
-- **Deployment**: Docker, Node.js binary, or traditional hosting
+- **Backend**: FastAPI + Python 3.11
+- **Database**: MongoDB with Motor (async driver)
+- **AI**: OpenAI GPT integration for content generation
+- **Security**: Encrypted API key storage with Fernet
+- **Deployment**: Docker multi-container setup
+
+## 🟡 Current Status
+
+This is a complete refactor with new user flow and FastAPI backend:
+- ✅ Docker deployment working (FastAPI + React + MongoDB)
+- ✅ Three-step onboarding flow with state management
+- ✅ Secure API key storage with encryption
+- ✅ Resume upload and parsing (PDF/DOCX support)
+- ✅ Job URL parsing and mock scraping
+- ✅ AI-powered outreach content generation (mock)
+- ✅ LinkedIn feed simulation with hashtag filtering
+- ✅ MongoDB data models and async operations
+- 🟡 Individual page functionality to be enhanced
+- 🟡 Real OpenAI integration (requires API key)
+- 🟡 Actual LinkedIn scraping (browser automation)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose installed
-- Node.js 20+ (optional, for local development)
+- Docker and Docker Compose installed (recommended)
+- OR: Node.js 20+, Python 3.11+, and MongoDB (for local development)
 
 ### 1. Clone and Install
 
@@ -43,21 +58,30 @@ cd Job-Search
 
 ### 2. Docker Setup (Recommended)
 
-Start the application with Docker:
+Start the full application stack with Docker:
 
 ```bash
 docker-compose up --build
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at:
+- **Frontend**: `http://localhost:3000`
+- **Backend API**: `http://localhost:8000`
+- **API Documentation**: `http://localhost:8000/docs`
+- **MongoDB**: `mongodb://admin:password123@localhost:27017`
 
 ### 3. Local Development (Alternative)
 
 For local development without Docker:
 
 ```bash
+# Quick start (installs dependencies and starts all services)
+./start-dev.sh
+
+# Or manually:
 npm install
-npm run dev
+cd backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && cd ..
+npm run dev:full
 ```
 
 ### 4. Environment Setup
@@ -158,18 +182,44 @@ Visit `/api/config/check` to see which features are available based on your API 
 ### Project Structure
 
 ```
-├── client/                 # React frontend
-│   ├── components/         # Reusable UI components
-│   ├── pages/             # Route components
-│   ├── hooks/             # Custom React hooks
-│   └── lib/               # Utilities
-├── server/                # Express backend
-│   ├── routes/            # API route handlers
-│   ├── config.ts          # Environment configuration
-│   └── index.ts           # Server setup
-├── shared/                # Shared TypeScript types
-└── public/                # Static assets
+├── client/           # React frontend
+│   ├── pages/        # Route components
+│   │   ├── onboard/  # Onboarding flow (API key, resume, LinkedIn)
+│   │   ├── Discover.tsx  # Job URL parsing and outreach generation
+│   │   ├── Feed.tsx      # LinkedIn hashtag feed simulation
+│   │   └── Dashboard.tsx # Job application tracking
+│   ├── components/   # Reusable UI components
+│   └── contexts/     # React context for state management
+├── backend/          # FastAPI Python backend
+│   ├── routes/       # API endpoints
+│   ├── models.py     # Pydantic data models
+│   ├── database.py   # MongoDB connection and operations
+│   └── main.py       # FastAPI application entry point
+├── shared/           # Shared TypeScript types
+└── docker-compose.yml # Multi-container orchestration
 ```
+
+## 🗺️ User Flow
+
+### Onboarding Process
+1. **Landing Page** (`/`) - Simple CTA to "Get Started"
+2. **API Key Setup** (`/onboard/api-key`) - Secure OpenAI API key storage
+3. **Resume Upload** (`/onboard/resume`) - PDF/DOCX parsing and data extraction
+4. **LinkedIn Setup** (`/onboard/linkedin`) - Enable LinkedIn features (demo mode)
+
+### Main Application
+1. **Dashboard** (`/dashboard`) - Job application tracking with stages
+2. **Discover** (`/discover`) - Job URL parsing and AI-powered outreach generation
+3. **Feed** (`/feed`) - LinkedIn hashtag following and post engagement
+4. **Applications** - Application pipeline management
+5. **Outreach** - Generated message templates and sending
+
+## 🔐 Security Features
+
+- **Encrypted API Storage**: OpenAI keys encrypted with Fernet (AES 128)
+- **No API Key Exposure**: Keys never returned to frontend after storage
+- **Local Processing**: Resume parsing and data extraction done server-side
+- **MongoDB Security**: Authentication-enabled database with proper indexing
 
 ### Available Scripts
 

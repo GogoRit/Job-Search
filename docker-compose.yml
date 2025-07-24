@@ -1,15 +1,67 @@
-version: '3.8'
 services:
-  app:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: job-search-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: job_search_assistant
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - job-search-network
+
+  # FastAPI Backend
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env
+      dockerfile: Dockerfile.backend
+    container_name: job-search-backend
+    restart: unless-stopped
+    environment:
+      - MONGODB_URL=mongodb://admin:password123@mongodb:27017/job_search_assistant?authSource=admin
+      - DATABASE_NAME=job_search_assistant
+      - ENVIRONMENT=production
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - job-search-network
+
+  # React Frontend (development - in production, this would be static files)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: job-search-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8000
     ports:
       - "3000:3000"
+    depends_on:
+      - backend
     volumes:
-      - ./.env:/app/.env:ro
-    environment:
-      - NODE_ENV=production
-    restart: unless-stopped 
+      - ./client:/app/client
+      - ./shared:/app/shared
+      - /app/node_modules
+    networks:
+      - job-search-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  job-search-network:
+    driver: bridge 
