@@ -14,7 +14,7 @@ import {
   ExternalLink,
   AlertTriangle
 } from "lucide-react";
-import { ConfigCheckResponse } from "@shared/api";
+import { ConfigCheckResponse } from "@/types/api";
 
 async function fetchConfigCheck(): Promise<ConfigCheckResponse> {
   const response = await fetch("/api/config/check");

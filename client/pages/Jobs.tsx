@@ -15,7 +15,7 @@ import {
   CheckCircle,
   Loader2
 } from "lucide-react";
-import { FeaturesResponse, ParseJobResponse, GenerateResponseResponse } from "@shared/api";
+import { FeaturesResponse, ParseJobResponse, GenerateResponseResponse } from "@/types/api";
 
 async function fetchFeatures(): Promise<FeaturesResponse> {
   const response = await fetch("/api/features");
