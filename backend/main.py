@@ -9,16 +9,23 @@ from dotenv import load_dotenv
 import uvicorn
 from typing import Optional
 import logging
+# Rate limiting temporarily disabled for troubleshooting
+# from slowapi.errors import RateLimitExceeded
 
 from models import *
-from routes import api_key, resume, jobs, linkedin, features
+from routes import api_key, resume, jobs, linkedin, features, user
 from database import database, get_database, connect, disconnect
 from encryption import EncryptionManager
+# from rate_limiter import limiter, rate_limit_exceeded_handler
 
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, log_level),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -41,10 +48,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Rate limiting temporarily disabled for troubleshooting
+# app.state.limiter = limiter
+# app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
 # Configure CORS
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8080"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,6 +68,7 @@ security = HTTPBearer(auto_error=False)
 # Include routers
 app.include_router(api_key.router, prefix="/api", tags=["API Keys"])
 app.include_router(resume.router, prefix="/api", tags=["Resume"])
+app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(jobs.router, prefix="/api", tags=["Jobs"])
 app.include_router(linkedin.router, prefix="/api", tags=["LinkedIn"])
 app.include_router(features.router, prefix="/api", tags=["Features"])

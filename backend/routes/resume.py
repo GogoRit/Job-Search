@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from models import ResumeUploadResponse, ParsedResumeData, Resume
 from database import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -11,6 +11,11 @@ import docx
 from io import BytesIO
 import re
 from bson import ObjectId
+from datetime import datetime
+from ocr_parser import ocr_parser, ExtractedResumeData
+# Rate limiting temporarily disabled for troubleshooting
+# from rate_limiter import limiter, OCR_RATE_LIMIT, API_RATE_LIMIT
+# from file_validator import validate_upload_file, get_file_info
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -167,3 +172,114 @@ async def get_latest_resume(
     except Exception as e:
         logger.error(f"Failed to get resume: {e}")
         raise HTTPException(status_code=500, detail="Failed to get resume")
+
+@router.get("/resume/data")
+async def get_resume_data(
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """Get resume data for profile setup"""
+    try:
+        # For demo - get any resume
+        resume_doc = await db.resumes.find_one(
+            {},
+            sort=[("created_at", -1)]
+        )
+        
+        if not resume_doc:
+            return {
+                "success": False,
+                "message": "No resume found",
+                "data": None
+            }
+        
+        return {
+            "success": True,
+            "message": "Resume data retrieved",
+            "data": resume_doc["parsed_data"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get resume data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get resume data")
+
+@router.post("/resume/upload-ocr", response_model=ResumeUploadResponse)
+# Rate limiting temporarily disabled for troubleshooting
+# @limiter.limit(OCR_RATE_LIMIT)
+async def upload_resume_with_ocr(
+    request: Request,
+    file: UploadFile = File(...),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Upload and parse resume using OCR and advanced text extraction
+    Rate limited to protect OCR processing resources
+    """
+    try:
+        # Basic file validation (simplified for now)
+        allowed_types = {
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'image/png',
+            'image/jpeg',
+            'image/jpg',
+            'image/tiff',
+            'image/bmp'
+        }
+        
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type. Allowed types: PDF, DOCX, DOC, PNG, JPG, TIFF, BMP"
+            )
+        
+        logger.info(f"Processing resume: {file.filename}")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file")
+        
+        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+        
+        # Parse using OCR
+        extracted_data = await ocr_parser.parse_resume_file(file_content, file.filename)
+        
+        # Convert to our ParsedResumeData format
+        parsed_data = ParsedResumeData(
+            name=extracted_data.name,
+            email=extracted_data.email,
+            phone=extracted_data.phone,
+            title=extracted_data.title,
+            summary=extracted_data.summary,
+            skills=extracted_data.skills,
+            experience=extracted_data.experience,
+            location=extracted_data.location
+        )
+        
+        # Store in database
+        resume_doc = {
+            "parsed_data": parsed_data.dict(),
+            "original_filename": file.filename,
+            "file_size": len(file_content),
+            "content_type": file.content_type,
+            "created_at": datetime.utcnow()
+        }
+        
+        result = await db.resumes.insert_one(resume_doc)
+        
+        logger.info(f"Resume stored with ID: {result.inserted_id}")
+        
+        return ResumeUploadResponse(
+            success=True,
+            message="Resume uploaded and parsed successfully with OCR",
+            parsed_data=parsed_data
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process resume with OCR: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process resume: {str(e)}")

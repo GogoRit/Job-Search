@@ -79,3 +79,21 @@ async def get_api_key_status(
     except Exception as e:
         logger.error(f"Failed to get API key status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get API key status")
+
+@router.get("/check-api-key")
+async def check_api_key(db: AsyncIOMotorDatabase = Depends(get_database)):
+    """
+    Check if an API key is saved in the system
+    """
+    try:
+        # For demo purposes, check if any user has an API key
+        user_count = await db.users.count_documents({"openai_key_encrypted": {"$exists": True}})
+        
+        return {
+            "has_api_key": user_count > 0,
+            "message": "API key check completed"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to check API key: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check API key")

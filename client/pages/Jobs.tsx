@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Badge } from "../components/ui/badge";
 import { 
   Briefcase, 
   Plus, 
@@ -15,7 +15,7 @@ import {
   CheckCircle,
   Loader2
 } from "lucide-react";
-import { FeaturesResponse, ParseJobResponse, GenerateResponseResponse } from "@/types/api";
+import { FeaturesResponse, ParseJobResponse, GenerateResponseResponse } from "../types/api";
 
 async function fetchFeatures(): Promise<FeaturesResponse> {
   const response = await fetch("/api/features");

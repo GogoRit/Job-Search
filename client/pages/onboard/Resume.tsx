@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileText, CheckCircle, User, Briefcase, Mail, MapPin } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Upload, FileText, CheckCircle, User, Briefcase, Mail, MapPin, ArrowLeft } from "lucide-react";
+import { useOnboarding } from "../../contexts/OnboardingContext";
 
 interface ParsedResumeData {
   name: string;
@@ -22,10 +23,20 @@ export default function Resume() {
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { setResumeUploaded } = useOnboarding();
 
   const handleFileSelect = (selectedFile: File) => {
-    if (!selectedFile.type.includes('pdf') && !selectedFile.type.includes('document')) {
-      setError("Please upload a PDF or Word document");
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/jpg'
+    ];
+    
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setError("Please upload a PDF, Word document, or image file (JPG, PNG)");
       return;
     }
     setFile(selectedFile);
@@ -56,54 +67,68 @@ export default function Resume() {
 
     try {
       const formData = new FormData();
-      formData.append('resume', file);
+      formData.append('file', file);
 
-      const response = await fetch('/api/resume', {
+      const response = await fetch('/api/resume/upload-ocr', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload resume');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to upload resume');
       }
 
       const data = await response.json();
-      setParsedData(data.parsed_data);
+      
+      // Transform the OCR response to match our expected interface
+      const transformedData: ParsedResumeData = {
+        name: data.personal_info?.name || 'Not specified',
+        email: data.personal_info?.email || 'Not specified',
+        title: data.personal_info?.title || 'Not specified',
+        skills: data.skills || [],
+        experience: data.experience?.join('\n') || 'No experience data found',
+        location: data.personal_info?.location
+      };
+      
+      setParsedData(transformedData);
     } catch (err) {
-      setError('Failed to parse resume. Please try again.');
+      console.error('Resume upload error:', err);
+      setError(`Failed to parse resume: ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleContinue = () => {
-    navigate("/onboard/linkedin");
+    setResumeUploaded(true); // Only mark as uploaded when actually continuing with parsed data
+    navigate("/onboard/profile");
   };
 
   const handleSkip = () => {
-    navigate("/onboard/linkedin");
+    // Don't mark as uploaded when skipping - just navigate
+    navigate("/onboard/profile");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Upload Your Resume
-          </h1>
-          <p className="text-gray-600">
-            We'll parse your resume to personalize your job applications
-          </p>
+    <div className="w-full">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <FileText className="h-8 w-8 text-white" />
         </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Upload Your Resume
+        </h1>
+        <p className="text-gray-600">
+          We'll parse your resume to personalize your job applications
+        </p>
+      </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
             <CardTitle>Resume Analysis</CardTitle>
             <CardDescription>
-              Upload your resume in PDF or Word format
+              Upload your resume in PDF, Word, or image format
             </CardDescription>
           </CardHeader>
           
@@ -141,7 +166,7 @@ export default function Resume() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={handleFileInput}
                     className="hidden"
                   />
@@ -162,6 +187,14 @@ export default function Resume() {
                 )}
 
                 <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/')}
+                    disabled={isUploading}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
                   <Button
                     onClick={uploadResume}
                     disabled={!file || isUploading}
@@ -237,12 +270,21 @@ export default function Resume() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleContinue}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  Continue to LinkedIn Setup
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/')}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleContinue}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
+                    Continue to Profile Setup
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
@@ -250,10 +292,9 @@ export default function Resume() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Step 2 of 3 • Resume parsing
+            Step 2 of 4 • Resume parsing
           </p>
         </div>
-      </div>
     </div>
   );
 }

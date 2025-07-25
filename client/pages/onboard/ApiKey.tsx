@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Eye, EyeOff, Key, Shield, CheckCircle } from "lucide-react";
-import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useOnboarding, useNextOnboardingStep } from "../../contexts/OnboardingContext";
 
 export default function ApiKey() {
   const [apiKey, setApiKey] = useState("");
@@ -15,7 +15,14 @@ export default function ApiKey() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  const { setApiKeySubmitted } = useOnboarding();
+  const { setApiKeySubmitted, resetOnboarding } = useOnboarding();
+  const nextStep = useNextOnboardingStep();
+
+  // Add a reset button for development/testing
+  const handleReset = () => {
+    resetOnboarding();
+    window.location.reload();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +50,7 @@ export default function ApiKey() {
       setSuccess(true);
       setApiKeySubmitted(true);
       setTimeout(() => {
-        navigate("/onboard/resume");
+        navigate(nextStep);
       }, 1500);
     } catch (err) {
       setError("Failed to store API key. Please try again.");
@@ -53,24 +60,23 @@ export default function ApiKey() {
   };
 
   const handleSkip = () => {
-    setApiKeySubmitted(true);
+    // Don't mark as submitted when skipping - just navigate
     navigate("/onboard/resume");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Key className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Connect Your AI Assistant
-          </h1>
-          <p className="text-gray-600">
-            Enter your OpenAI API key to enable AI-powered features
-          </p>
+    <div className="w-full">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <Key className="h-8 w-8 text-white" />
         </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Connect Your AI Assistant
+        </h1>
+        <p className="text-gray-600">
+          Enter your OpenAI API key to enable AI-powered features
+        </p>
+      </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
@@ -158,10 +164,17 @@ export default function ApiKey() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Step 1 of 3 • Secure setup process
+            Step 1 of 4 • Secure setup process
           </p>
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            size="sm"
+            className="mt-2 text-xs"
+          >
+            Reset Onboarding (Dev)
+          </Button>
         </div>
-      </div>
     </div>
   );
 }

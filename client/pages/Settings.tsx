@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { 
   CheckCircle, 
   XCircle, 
@@ -14,7 +14,7 @@ import {
   ExternalLink,
   AlertTriangle
 } from "lucide-react";
-import { ConfigCheckResponse } from "@/types/api";
+import { ConfigCheckResponse } from "../types/api";
 
 async function fetchConfigCheck(): Promise<ConfigCheckResponse> {
   const response = await fetch("/api/config/check");

@@ -62,7 +62,7 @@ npm install
 # Copy environment file
 if [ ! -f ".env" ]; then
     echo "📝 Creating environment file..."
-    cp .env.backend .env
+    cp .env.example .env
     echo "⚠️ Please edit .env file with your API keys"
 fi
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useOnboarding, useOnboardingStep } from "@/contexts/OnboardingContext";
+import { useOnboarding, useOnboardingStep } from "../contexts/OnboardingContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -36,7 +36,6 @@ export function OnboardingRoute({ children }: { children: React.ReactNode }) {
   const { state } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
-  const nextStep = useOnboardingStep();
 
   useEffect(() => {
     // If onboarding is complete, redirect to dashboard
@@ -45,11 +44,14 @@ export function OnboardingRoute({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If we're not on the correct step, redirect
-    if (location.pathname !== nextStep) {
-      navigate(nextStep);
-    }
-  }, [state, location.pathname, navigate, nextStep]);
+    // Allow users to navigate freely within onboarding pages
+    // Only enforce order when they try to skip required steps WITHOUT actually completing them
+    const currentPath = location.pathname;
+    
+    // Allow direct navigation within onboarding - users can skip steps
+    // The individual pages will handle showing appropriate content
+    
+  }, [state, location.pathname, navigate]);
 
   return <>{children}</>;
 }

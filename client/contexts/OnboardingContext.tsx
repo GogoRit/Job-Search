@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 interface OnboardingState {
   apiKeySubmitted: boolean;
   resumeUploaded: boolean;
+  profileCompleted: boolean;
   linkedinEnabled: boolean;
   onboardingComplete: boolean;
 }
@@ -11,9 +12,11 @@ interface OnboardingContextType {
   state: OnboardingState;
   setApiKeySubmitted: (submitted: boolean) => void;
   setResumeUploaded: (uploaded: boolean) => void;
+  setProfileCompleted: (completed: boolean) => void;
   setLinkedinEnabled: (enabled: boolean) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
+  validateApiKey: () => Promise<boolean>;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -37,6 +40,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     return {
       apiKeySubmitted: false,
       resumeUploaded: false,
+      profileCompleted: false,
       linkedinEnabled: false,
       onboardingComplete: false,
     };
@@ -49,12 +53,32 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }
   }, [state]);
 
+  // Validate API key on component mount if onboarding is marked complete
+  useEffect(() => {
+    if (state.onboardingComplete && state.apiKeySubmitted) {
+      validateApiKey().then((hasApiKey) => {
+        if (!hasApiKey) {
+          // Reset API key submission status if no actual API key found
+          setState(prev => ({
+            ...prev,
+            apiKeySubmitted: false,
+            onboardingComplete: false
+          }));
+        }
+      });
+    }
+  }, []); // Only run on mount
+
   const setApiKeySubmitted = (submitted: boolean) => {
     setState(prev => ({ ...prev, apiKeySubmitted: submitted }));
   };
 
   const setResumeUploaded = (uploaded: boolean) => {
     setState(prev => ({ ...prev, resumeUploaded: uploaded }));
+  };
+
+  const setProfileCompleted = (completed: boolean) => {
+    setState(prev => ({ ...prev, profileCompleted: completed }));
   };
 
   const setLinkedinEnabled = (enabled: boolean) => {
@@ -69,9 +93,21 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setState({
       apiKeySubmitted: false,
       resumeUploaded: false,
+      profileCompleted: false,
       linkedinEnabled: false,
       onboardingComplete: false,
     });
+  };
+
+  const validateApiKey = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/check-api-key');
+      const data = await response.json();
+      return data.has_api_key || false;
+    } catch (error) {
+      console.error('Failed to validate API key:', error);
+      return false;
+    }
   };
 
   return (
@@ -80,9 +116,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         state,
         setApiKeySubmitted,
         setResumeUploaded,
+        setProfileCompleted,
         setLinkedinEnabled,
         completeOnboarding,
         resetOnboarding,
+        validateApiKey,
       }}
     >
       {children}
@@ -108,6 +146,9 @@ export function useCanAccessApp() {
 export function useOnboardingStep() {
   const { state } = useOnboarding();
   
+  // Always allow access to API key page (users can update their key)
+  // Only redirect if they're not already on an onboarding page
+  
   if (!state.apiKeySubmitted) {
     return "/";
   }
@@ -116,7 +157,30 @@ export function useOnboardingStep() {
     return "/onboard/resume";
   }
   
+  if (!state.profileCompleted) {
+    return "/onboard/profile";
+  }
+  
   if (!state.onboardingComplete) {
+    return "/onboard/linkedin";
+  }
+  
+  return "/dashboard";
+}
+
+// Hook to get the next step for navigation (used by components to decide where to go next)
+export function useNextOnboardingStep() {
+  const { state } = useOnboarding();
+  
+  if (!state.apiKeySubmitted) {
+    return "/onboard/resume";
+  }
+  
+  if (!state.resumeUploaded) {
+    return "/onboard/profile";
+  }
+  
+  if (!state.profileCompleted) {
     return "/onboard/linkedin";
   }
   
