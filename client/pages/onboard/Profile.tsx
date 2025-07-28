@@ -6,9 +6,20 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { CheckCircle, User, ArrowLeft, Lock } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
+import { CheckCircle, User, ArrowLeft, Lock, Plus, X, Edit2, Save, Cancel, Building, MapPin, Calendar, Briefcase } from "lucide-react";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useToast } from "../../hooks/use-toast";
+
+interface WorkExperience {
+  company: string;
+  title: string;
+  location?: string;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+  duration?: string;
+}
 
 interface ProfileData {
   name: string;
@@ -16,8 +27,16 @@ interface ProfileData {
   phone: string;
   title: string;
   summary: string;
-  skills: string;
-  experience: string;
+  skills: string[];
+  experience: WorkExperience[];
+  location: string;
+  linkedin_url: string;
+  portfolio_url: string;
+  github_url: string;
+  years_experience: number | null;
+  certifications: string[];
+  languages: string[];
+  availability: string;
   username: string;
   password: string;
 }
@@ -29,8 +48,16 @@ export default function Profile() {
     phone: "",
     title: "",
     summary: "",
-    skills: "",
-    experience: "",
+    skills: [],
+    experience: [],
+    location: "",
+    linkedin_url: "",
+    portfolio_url: "",
+    github_url: "",
+    years_experience: null,
+    certifications: [],
+    languages: [],
+    availability: "",
     username: "",
     password: "",
   });
@@ -39,6 +66,22 @@ export default function Profile() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+  const [editingSkills, setEditingSkills] = useState(false);
+  const [editingCertifications, setEditingCertifications] = useState(false);
+  const [editingLanguages, setEditingLanguages] = useState(false);
+  const [editingExperience, setEditingExperience] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
+  const [newCertification, setNewCertification] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");
+  const [newExperience, setNewExperience] = useState<WorkExperience>({
+    company: "",
+    title: "",
+    location: "",
+    start_date: "",
+    end_date: "",
+    description: "",
+    duration: ""
+  });
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -64,8 +107,16 @@ export default function Profile() {
           phone: resumeData.phone || "",
           title: resumeData.title || "",
           summary: resumeData.summary || "",
-          skills: Array.isArray(resumeData.skills) ? resumeData.skills.join(", ") : (resumeData.skills || ""),
-          experience: resumeData.experience || "",
+          skills: Array.isArray(resumeData.skills) ? resumeData.skills : [],
+          experience: Array.isArray(resumeData.experience) ? resumeData.experience : [],
+          location: resumeData.location || "",
+          linkedin_url: resumeData.linkedin_url || "",
+          portfolio_url: resumeData.portfolio_url || "",
+          github_url: resumeData.github_url || "",
+          years_experience: resumeData.years_experience || null,
+          certifications: Array.isArray(resumeData.certifications) ? resumeData.certifications : [],
+          languages: Array.isArray(resumeData.languages) ? resumeData.languages : [],
+          availability: resumeData.availability || "",
         }));
         
         toast({
@@ -124,7 +175,7 @@ export default function Profile() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof ProfileData, value: string) => {
+  const handleInputChange = (field: keyof ProfileData, value: string | number | null) => {
     setProfileData(prev => ({
       ...prev,
       [field]: value
@@ -137,6 +188,58 @@ export default function Profile() {
         [field]: ""
       }));
     }
+  };
+
+  // Helper functions for managing arrays
+  const addSkill = () => {
+    if (newSkill.trim() && !profileData.skills.includes(newSkill.trim())) {
+      setProfileData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill("");
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+
+  const addCertification = () => {
+    if (newCertification.trim() && !profileData.certifications.includes(newCertification.trim())) {
+      setProfileData(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, newCertification.trim()]
+      }));
+      setNewCertification("");
+    }
+  };
+
+  const removeCertification = (certToRemove: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter(cert => cert !== certToRemove)
+    }));
+  };
+
+  const addLanguage = () => {
+    if (newLanguage.trim() && !profileData.languages.includes(newLanguage.trim())) {
+      setProfileData(prev => ({
+        ...prev,
+        languages: [...prev.languages, newLanguage.trim()]
+      }));
+      setNewLanguage("");
+    }
+  };
+
+  const removeLanguage = (langToRemove: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      languages: prev.languages.filter(lang => lang !== langToRemove)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -304,9 +407,10 @@ export default function Profile() {
               </div>
 
               {/* Professional Information */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <h3 className="font-semibold text-gray-900 border-b pb-2">Professional Information</h3>
                 
+                {/* Professional Summary */}
                 <div>
                   <Label htmlFor="summary">Professional Summary</Label>
                   <Textarea
@@ -318,26 +422,221 @@ export default function Profile() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="skills">Skills</Label>
-                  <Input
-                    id="skills"
-                    type="text"
-                    value={profileData.skills}
-                    onChange={(e) => handleInputChange('skills', e.target.value)}
-                    placeholder="JavaScript, Python, Project Management, etc. (comma-separated)"
-                  />
+                {/* Additional Fields Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      type="text"
+                      value={profileData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      placeholder="City, State/Country"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="years_experience">Years of Experience</Label>
+                    <Input
+                      id="years_experience"
+                      type="number"
+                      value={profileData.years_experience || ''}
+                      onChange={(e) => handleInputChange('years_experience', parseInt(e.target.value) || null)}
+                      placeholder="5"
+                      min="0"
+                      max="50"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="availability">Availability</Label>
+                    <Input
+                      id="availability"
+                      type="text"
+                      value={profileData.availability}
+                      onChange={(e) => handleInputChange('availability', e.target.value)}
+                      placeholder="Immediately, 2 weeks notice, etc."
+                    />
+                  </div>
                 </div>
 
+                {/* URLs */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                    <Input
+                      id="linkedin_url"
+                      type="url"
+                      value={profileData.linkedin_url}
+                      onChange={(e) => handleInputChange('linkedin_url', e.target.value)}
+                      placeholder="https://linkedin.com/in/yourprofile"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="github_url">GitHub URL</Label>
+                    <Input
+                      id="github_url"
+                      type="url"
+                      value={profileData.github_url}
+                      onChange={(e) => handleInputChange('github_url', e.target.value)}
+                      placeholder="https://github.com/yourusername"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="portfolio_url">Portfolio/Website URL</Label>
+                    <Input
+                      id="portfolio_url"
+                      type="url"
+                      value={profileData.portfolio_url}
+                      onChange={(e) => handleInputChange('portfolio_url', e.target.value)}
+                      placeholder="https://yourportfolio.com"
+                    />
+                  </div>
+                </div>
+
+                {/* Skills Card */}
+                <div>
+                  <Label className="text-base font-medium">Skills</Label>
+                  <Card className="mt-2">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* Skills Display */}
+                        <div className="flex flex-wrap gap-2">
+                          {profileData.skills.map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                              {skill}
+                              <button
+                                type="button"
+                                onClick={() => removeSkill(skill)}
+                                className="ml-1 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {profileData.skills.length === 0 && (
+                            <p className="text-sm text-gray-500">No skills added yet</p>
+                          )}
+                        </div>
+                        
+                        {/* Add Skill */}
+                        <div className="flex gap-2">
+                          <Input
+                            value={newSkill}
+                            onChange={(e) => setNewSkill(e.target.value)}
+                            placeholder="Add a skill (e.g., JavaScript, Project Management)"
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                          />
+                          <Button type="button" onClick={addSkill} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Experience Summary */}
                 <div>
                   <Label htmlFor="experience">Experience Summary</Label>
-                  <Textarea
-                    id="experience"
-                    value={profileData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
-                    placeholder="Brief overview of your work experience..."
-                    rows={4}
-                  />
+                  <Card className="mt-2">
+                    <CardContent className="p-4">
+                      <Textarea
+                        id="experience"
+                        value={profileData.experience}
+                        onChange={(e) => handleInputChange('experience', e.target.value)}
+                        placeholder="Brief overview of your work experience, key achievements, and responsibilities..."
+                        rows={4}
+                        className="border-0 resize-none focus:ring-0"
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Certifications Card */}
+                <div>
+                  <Label className="text-base font-medium">Certifications</Label>
+                  <Card className="mt-2">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* Certifications Display */}
+                        <div className="space-y-2">
+                          {profileData.certifications.map((cert, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-sm">{cert}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeCertification(cert)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                          {profileData.certifications.length === 0 && (
+                            <p className="text-sm text-gray-500">No certifications added yet</p>
+                          )}
+                        </div>
+                        
+                        {/* Add Certification */}
+                        <div className="flex gap-2">
+                          <Input
+                            value={newCertification}
+                            onChange={(e) => setNewCertification(e.target.value)}
+                            placeholder="Add a certification (e.g., AWS Solutions Architect)"
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCertification())}
+                          />
+                          <Button type="button" onClick={addCertification} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Languages Card */}
+                <div>
+                  <Label className="text-base font-medium">Languages</Label>
+                  <Card className="mt-2">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* Languages Display */}
+                        <div className="flex flex-wrap gap-2">
+                          {profileData.languages.map((language, index) => (
+                            <Badge key={index} variant="outline" className="flex items-center gap-1">
+                              {language}
+                              <button
+                                type="button"
+                                onClick={() => removeLanguage(language)}
+                                className="ml-1 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {profileData.languages.length === 0 && (
+                            <p className="text-sm text-gray-500">No languages added yet</p>
+                          )}
+                        </div>
+                        
+                        {/* Add Language */}
+                        <div className="flex gap-2">
+                          <Input
+                            value={newLanguage}
+                            onChange={(e) => setNewLanguage(e.target.value)}
+                            placeholder="Add a language (e.g., Spanish, Python, French)"
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
+                          />
+                          <Button type="button" onClick={addLanguage} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 

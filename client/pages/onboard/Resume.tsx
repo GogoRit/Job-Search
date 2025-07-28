@@ -3,16 +3,32 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Upload, FileText, CheckCircle, User, Briefcase, Mail, MapPin, ArrowLeft } from "lucide-react";
+import { Upload, FileText, CheckCircle, User, Briefcase, Mail, MapPin, ArrowLeft, Calendar, Building2, GraduationCap, Link } from "lucide-react";
 import { useOnboarding } from "../../contexts/OnboardingContext";
+
+interface WorkExperience {
+  company: string;
+  title: string;
+  location?: string;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+  duration?: string;
+}
 
 interface ParsedResumeData {
   name: string;
   email: string;
+  phone: string;
   title: string;
+  summary: string;
   skills: string[];
-  experience: string;
-  location?: string;
+  experience: WorkExperience[];
+  education: string;
+  location: string;
+  linkedin_url?: string;
+  github_url?: string;
+  years_experience?: number;
 }
 
 export default function Resume() {
@@ -81,17 +97,21 @@ export default function Resume() {
 
       const data = await response.json();
       
-      // Transform the OCR response to match our expected interface
+      // Transform the response to match our interface
       const transformedData: ParsedResumeData = {
-        name: data.personal_info?.name || 'Not specified',
-        email: data.personal_info?.email || 'Not specified',
-        title: data.personal_info?.title || 'Not specified',
-        skills: data.skills || [],
-        experience: data.experience?.join('\n') || 'No experience data found',
-        location: data.personal_info?.location
-      };
-      
-      setParsedData(transformedData);
+        name: data.parsed_data?.name || "Unknown",
+        email: data.parsed_data?.email || "",
+        phone: data.parsed_data?.phone || "",
+        title: data.parsed_data?.title || "",
+        summary: data.parsed_data?.summary || "",
+        skills: data.parsed_data?.skills || [],
+        experience: data.parsed_data?.experience || [],
+        education: data.parsed_data?.education || "",
+        location: data.parsed_data?.location || "",
+        linkedin_url: data.parsed_data?.linkedin_url,
+        github_url: data.parsed_data?.github_url,
+        years_experience: data.parsed_data?.years_experience
+      };      setParsedData(transformedData);
     } catch (err) {
       console.error('Resume upload error:', err);
       setError(`Failed to parse resume: ${err instanceof Error ? err.message : 'Please try again.'}`);
@@ -213,61 +233,16 @@ export default function Resume() {
                 </div>
               </>
             ) : (
-              /* Parsed Data Display */
+              /* Success notification only */
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-green-600 font-semibold">
-                  <CheckCircle className="h-5 w-5" />
+                <div className="flex items-center justify-center gap-2 text-green-600 font-semibold text-lg">
+                  <CheckCircle className="h-6 w-6" />
                   Resume parsed successfully!
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <User className="h-4 w-4" />
-                      Name
-                    </div>
-                    <p className="text-gray-900">{parsedData.name}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <Mail className="h-4 w-4" />
-                      Email
-                    </div>
-                    <p className="text-gray-900">{parsedData.email}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <Briefcase className="h-4 w-4" />
-                      Title
-                    </div>
-                    <p className="text-gray-900">{parsedData.title}</p>
-                  </div>
-
-                  {parsedData.location && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                        <MapPin className="h-4 w-4" />
-                        Location
-                      </div>
-                      <p className="text-gray-900">{parsedData.location}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700">Skills</div>
-                  <div className="flex flex-wrap gap-2">
-                    {parsedData.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+                <div className="text-center text-gray-600">
+                  <p>Your resume has been successfully processed and parsed.</p>
+                  <p className="text-sm mt-2">Click "Continue to Profile Setup" to review and complete your profile.</p>
                 </div>
 
                 <div className="flex gap-3">

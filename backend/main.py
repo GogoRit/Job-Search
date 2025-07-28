@@ -67,7 +67,7 @@ security = HTTPBearer(auto_error=False)
 
 # Include routers
 app.include_router(api_key.router, prefix="/api", tags=["API Keys"])
-app.include_router(resume.router, prefix="/api", tags=["Resume"])
+app.include_router(resume.router, prefix="/api/resume", tags=["Resume"])
 app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(jobs.router, prefix="/api", tags=["Jobs"])
 app.include_router(linkedin.router, prefix="/api", tags=["LinkedIn"])

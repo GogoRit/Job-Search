@@ -1,0 +1,26 @@
+John Doe
+Software Engineer
+john.doe@email.com
+(555) 123-4567
+
+Summary:
+Experienced software engineer with 5+ years developing web applications.
+
+Skills:
+- Python
+- JavaScript
+- React
+- Django
+
+Experience:
+Senior Software Engineer at Tech Corp (2020-Present)
+- Developed and maintained web applications
+- Led team of 3 developers
+- Implemented automated testing
+
+Education:
+Bachelor of Science in Computer Science
+Rochester Institute of Technology
+Graduated 2018
+
+Location: San Francisco, CA

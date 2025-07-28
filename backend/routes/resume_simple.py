@@ -163,53 +163,6 @@ async def upload_resume(
             detail=f"Failed to process resume: {str(e)}"
         )
 
-@router.post("/upload-ocr", response_model=ResumeUploadResponse)
-async def upload_resume_ocr(
-    file: UploadFile = File(...),
-    request: Request = None,
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
-    """
-    Upload and parse resume file using simplified OCR parser (alias for /upload)
-    """
-    return await upload_resume(file, request, db)
-
-@router.get("/data")
-async def get_resume_data(
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
-    """
-    Get the most recent resume data for the user
-    """
-    try:
-        # Get the most recent resume
-        resume = await db.resumes.find_one(
-            {}, 
-            sort=[("upload_date", -1)]
-        )
-        
-        if not resume:
-            raise HTTPException(status_code=404, detail="No resume found")
-        
-        # Return the parsed data
-        parsed_data = resume.get("parsed_data", {})
-        
-        return {
-            "success": True,
-            "data": parsed_data,
-            "resume_id": str(resume["_id"]),
-            "upload_date": resume.get("upload_date")
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to retrieve resume data: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve resume data: {str(e)}"
-        )
-
 @router.get("/list")
 async def list_resumes(
     db: AsyncIOMotorDatabase = Depends(get_database),

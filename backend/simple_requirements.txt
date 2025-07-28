@@ -1,0 +1,19 @@
+# Simplified Resume Parser Dependencies
+# Core document processing
+PyPDF2>=3.0.0
+python-docx>=0.8.11
+pdf2image>=1.16.0
+
+# Image processing
+Pillow>=9.0.0
+numpy>=1.21.0
+
+# OCR engines
+paddleocr>=2.6.0
+pytesseract>=0.3.10
+
+# NLP
+spacy>=3.4.0
+
+# Optional: spaCy model (install separately)
+# python -m spacy download en_core_web_sm

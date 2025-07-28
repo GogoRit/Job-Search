@@ -1,16 +1,25 @@
-# Development Dockerfile for FastAPI Backend
+# Simplified Dockerfile for FastAPI Backend
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install essential system dependencies for OCR
 RUN apt-get update && apt-get install -y \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libtesseract-dev \
+    tesseract-ocr \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements first for better caching
+# Copy requirements and install Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install spaCy English model
+RUN python -m spacy download en_core_web_sm
 
 # Copy backend source code
 COPY backend/ .
@@ -18,5 +27,5 @@ COPY backend/ .
 # Expose port
 EXPOSE 8000
 
-# Development command with hot reload
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Production command
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

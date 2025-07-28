@@ -45,15 +45,42 @@ class ApiKeyResponse(BaseModel):
     message: str
 
 # Resume Models
+class WorkExperience(BaseModel):
+    """Structured work experience entry"""
+    company: str
+    title: str  # Job title/position
+    location: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None  # "Present" for current positions
+    description: Optional[str] = None
+    duration: Optional[str] = None  # e.g., "2 years 3 months"
+
 class ParsedResumeData(BaseModel):
+    # Core Identity Fields (Required for most job applications)
     name: str
     email: str
-    title: str
-    skills: List[str]
-    experience: str
-    location: Optional[str] = None
-    education: Optional[List[str]] = None
+    phone: Optional[str] = None
+    
+    # Professional Information
+    title: str  # Current job title or desired position
+    summary: Optional[str] = None  # Professional summary/objective
+    
+    # Experience & Skills
+    skills: List[str] = []
+    experience: List[WorkExperience] = []  # Structured work experience list
+    education: Optional[str] = None  # Education background
+    
+    # Additional Standard Fields
+    location: Optional[str] = None  # Current location or preferred work location
+    linkedin_url: Optional[str] = None  # LinkedIn profile
+    portfolio_url: Optional[str] = None  # Portfolio or personal website
+    github_url: Optional[str] = None  # GitHub profile
+    years_experience: Optional[int] = None  # Total years of experience
+    
+    # Optional Enhancement Fields
     certifications: Optional[List[str]] = None
+    languages: Optional[List[str]] = None  # Programming/spoken languages
+    availability: Optional[str] = None  # Notice period or availability
 
 class ResumeUploadResponse(BaseModel):
     success: bool
