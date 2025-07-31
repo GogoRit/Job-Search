@@ -1,7 +1,6 @@
 import "./global.css";
 
 import { Toaster } from "./components/ui/toaster";
-import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,8 +20,11 @@ import NotFound from "./pages/NotFound";
 // Onboard pages
 import ApiKey from "./pages/onboard/ApiKey";
 import Resume from "./pages/onboard/Resume";
-import Profile from "./pages/onboard/Profile";
 import LinkedIn from "./pages/onboard/LinkedIn";
+
+// Auth pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 // New main pages
 import Discover from "./pages/Discover";
@@ -31,6 +33,7 @@ import Index from "./pages/Index";
 
 // Context and routing
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute, OnboardingRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -38,166 +41,160 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <OnboardingProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Landing/Home page with special layout */}
-              <Route 
-                path="/landing" 
-                element={
-                  <LandingLayout>
-                    <Index />
-                  </LandingLayout>
-                } 
-              />
+      <AuthProvider>
+        <OnboardingProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Landing/Home page with special layout */}
+                <Route 
+                  path="/landing" 
+                  element={
+                    <LandingLayout>
+                      <Index />
+                    </LandingLayout>
+                  } 
+                />
 
-              {/* Onboarding Routes with minimal layout */}
-              <Route 
-                path="/" 
-                element={
-                  <OnboardingRoute>
-                    <OnboardingLayout>
-                      <ApiKey />
-                    </OnboardingLayout>
-                  </OnboardingRoute>
-                } 
-              />
-              <Route 
-                path="/onboard/resume" 
-                element={
-                  <OnboardingRoute>
-                    <OnboardingLayout>
-                      <Resume />
-                    </OnboardingLayout>
-                  </OnboardingRoute>
-                } 
-              />
-              <Route 
-                path="/onboard/profile" 
-                element={
-                  <OnboardingRoute>
-                    <OnboardingLayout>
-                      <Profile />
-                    </OnboardingLayout>
-                  </OnboardingRoute>
-                } 
-              />
-              <Route 
-                path="/onboard/linkedin" 
-                element={
-                  <OnboardingRoute>
-                    <OnboardingLayout>
-                      <LinkedIn />
-                    </OnboardingLayout>
-                  </OnboardingRoute>
-                } 
-              />
+                {/* Auth Routes */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/register" element={<Register />} />
+
+                {/* Onboarding Routes with minimal layout */}
+                <Route 
+                  path="/" 
+                  element={
+                    <OnboardingRoute>
+                      <OnboardingLayout>
+                        <ApiKey />
+                      </OnboardingLayout>
+                    </OnboardingRoute>
+                  } 
+                />
+                <Route 
+                  path="/onboard/resume" 
+                  element={
+                    <OnboardingRoute>
+                      <OnboardingLayout>
+                        <Resume />
+                      </OnboardingLayout>
+                    </OnboardingRoute>
+                  } 
+                />
+                <Route 
+                  path="/onboard/linkedin" 
+                  element={
+                    <OnboardingRoute>
+                      <OnboardingLayout>
+                        <LinkedIn />
+                      </OnboardingLayout>
+                    </OnboardingRoute>
+                  } 
+                />
               
-              {/* Protected Main App Routes with full app layout */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Dashboard />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/discover" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Discover />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/feed" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Feed />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/jobs" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Jobs />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/applications" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Applications />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/outreach" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Outreach />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/referrals" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Referrals />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/alerts" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Alerts />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <MainAppLayout>
-                      <Settings />
-                    </MainAppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* 404 page */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </OnboardingProvider>
+                {/* Protected Main App Routes with full app layout */}
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Dashboard />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/discover" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Discover />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/feed" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Feed />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/jobs" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Jobs />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/applications" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Applications />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/outreach" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Outreach />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/referrals" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Referrals />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/alerts" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Alerts />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <MainAppLayout>
+                        <Settings />
+                      </MainAppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* 404 page */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </OnboardingProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
 
 export default App;
-
-createRoot(document.getElementById("root")!).render(<App />);

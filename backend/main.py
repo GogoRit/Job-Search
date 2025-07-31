@@ -13,7 +13,7 @@ import logging
 # from slowapi.errors import RateLimitExceeded
 
 from models import *
-from routes import api_key, resume, jobs, linkedin, features, user
+from routes import api_key, resume, jobs, linkedin, features, user, auth
 from database import database, get_database, connect, disconnect
 from encryption import EncryptionManager
 # from rate_limiter import limiter, rate_limit_exceeded_handler
@@ -66,6 +66,7 @@ app.add_middleware(
 security = HTTPBearer(auto_error=False)
 
 # Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(api_key.router, prefix="/api", tags=["API Keys"])
 app.include_router(resume.router, prefix="/api/resume", tags=["Resume"])
 app.include_router(user.router, prefix="/api", tags=["User"])

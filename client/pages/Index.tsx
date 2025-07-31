@@ -47,15 +47,17 @@ const Index: React.FC = () => {
               Track your progress and land your next opportunity with confidence.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/onboard/api-key">
+              <Link to="/auth/register">
                 <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-8 py-3 text-lg">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="px-8 py-3 text-lg">
-                Watch Demo
-              </Button>
+              <Link to="/auth/login">
+                <Button variant="outline" size="lg" className="px-8 py-3 text-lg">
+                  Sign In
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -205,7 +207,7 @@ const Index: React.FC = () => {
             Join thousands of professionals who have already accelerated their careers with our platform
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/onboard/api-key">
+            <Link to="/auth/register">
               <Button size="lg" variant="secondary" className="px-8 py-3 text-lg bg-white text-blue-600 hover:bg-gray-50">
                 Start Your Journey
                 <ArrowRight className="ml-2 h-5 w-5" />

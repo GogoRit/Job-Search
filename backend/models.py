@@ -36,6 +36,23 @@ class PyObjectId(ObjectId):
     ) -> JsonSchemaValue:
         return handler(core_schema.str_schema())
 
+# Authentication Models
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    name: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 # API Key Models
 class ApiKeyStore(BaseModel):
     api_key: str
@@ -142,6 +159,9 @@ class LinkedInResponse(BaseModel):
 # Database Models
 class User(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    email: str
+    password_hash: str
+    name: str
     openai_key_encrypted: Optional[str] = None
     linkedin_enabled: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)

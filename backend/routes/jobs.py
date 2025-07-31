@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from models import JobRequest, JobResponse, JobData, OutreachRequest, OutreachResponse, JobSave, Job
+from models import JobRequest, JobResponse, JobData, OutreachRequest, OutreachResponse, JobSave, Job, User
 from database import get_database
+from auth import get_current_active_user
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import logging
 import re
@@ -147,14 +148,13 @@ async def generate_outreach(
 @router.post("/job/save")
 async def save_job(
     job_save: JobSave,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Save job to user's dashboard"""
     try:
-        user_id = ObjectId()  # For demo - in production, get from auth
-        
         job = Job(
-            user_id=user_id,
+            user_id=current_user.id,
             title=job_save.title,
             company=job_save.company,
             location=job_save.location,
@@ -168,7 +168,7 @@ async def save_job(
         
         result = await db.jobs.insert_one(job.dict(by_alias=True))
         
-        logger.info(f"Saved job {job.title} at {job.company} for user {user_id}")
+        logger.info(f"Saved job {job.title} at {job.company} for user {current_user.id}")
         
         return {
             "success": True,
@@ -183,12 +183,13 @@ async def save_job(
 @router.get("/jobs")
 async def get_user_jobs(
     stage: str = None,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Get user's saved jobs"""
     try:
-        # For demo - get all jobs
-        query = {}
+        # Get jobs for current user only
+        query = {"user_id": current_user.id}
         if stage:
             query["stage"] = stage
         

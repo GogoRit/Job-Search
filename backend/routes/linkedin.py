@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
-from models import LinkedInSettings, LinkedInResponse
+from models import LinkedInSettings, LinkedInResponse, User
 from database import get_database
+from auth import get_current_active_user
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import logging
 from bson import ObjectId
@@ -17,15 +18,14 @@ logger = logging.getLogger(__name__)
 @router.post("/linkedin-settings", response_model=LinkedInResponse)
 async def save_linkedin_settings(
     settings: LinkedInSettings,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Save LinkedIn integration settings"""
     try:
-        user_id = ObjectId()  # For demo - in production, get from auth
-        
         # Update user's LinkedIn settings
         await db.users.update_one(
-            {"_id": user_id},
+            {"_id": current_user.id},
             {
                 "$set": {
                     "linkedin_enabled": settings.linkedin_enabled,
@@ -35,7 +35,7 @@ async def save_linkedin_settings(
             upsert=True
         )
         
-        logger.info(f"LinkedIn settings updated for user {user_id}: enabled={settings.linkedin_enabled}")
+        logger.info(f"LinkedIn settings updated for user {current_user.id}: enabled={settings.linkedin_enabled}")
         
         return LinkedInResponse(
             success=True,
@@ -48,28 +48,29 @@ async def save_linkedin_settings(
 
 @router.get("/linkedin-status")
 async def get_linkedin_status(
+    current_user: User = Depends(get_current_active_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
-    """Get LinkedIn integration status"""
+    """Get LinkedIn integration status for current user"""
     try:
-        # Check if any user has LinkedIn connected
-        user = await db.users.find_one({"linkedin_connected": True})
+        # Get current user's LinkedIn status
+        user_doc = await db.users.find_one({"_id": current_user.id})
         
-        if user:
+        if user_doc and user_doc.get("linkedin_connected"):
             return {
                 "connected": True,
-                "linkedin_enabled": user.get("linkedin_enabled", False),
+                "linkedin_enabled": user_doc.get("linkedin_enabled", False),
                 "user_data": {
-                    "name": user.get("linkedin_name"),
-                    "email": user.get("linkedin_email"),
-                    "profile_picture": user.get("linkedin_profile_picture")
+                    "name": user_doc.get("linkedin_name"),
+                    "email": user_doc.get("linkedin_email"),
+                    "profile_picture": user_doc.get("linkedin_profile_picture")
                 },
                 "message": "LinkedIn status retrieved"
             }
         else:
             return {
                 "connected": False,
-                "linkedin_enabled": False,
+                "linkedin_enabled": user_doc.get("linkedin_enabled", False) if user_doc else False,
                 "message": "No LinkedIn connection found"
             }
         

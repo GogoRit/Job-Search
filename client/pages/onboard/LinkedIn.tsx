@@ -97,6 +97,14 @@ export default function LinkedIn() {
     navigate('/dashboard');
   };
 
+  const handleSkip = () => {
+    // Mark LinkedIn as enabled (even if skipped) so user can complete it later
+    setLinkedinEnabledContext(true);
+    // Skip LinkedIn setup, complete onboarding, and go to dashboard
+    completeOnboarding();
+    navigate('/dashboard');
+  };
+
   return (
     <div className="w-full">
       <div className="text-center mb-8">
@@ -249,7 +257,7 @@ export default function LinkedIn() {
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => navigate('/onboard/profile')}
+                    onClick={() => navigate('/onboard/resume')}
                     className="flex-1"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -262,6 +270,14 @@ export default function LinkedIn() {
                   >
                     {isLoading ? "Completing Setup..." : "Complete Setup"}
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSkip}
+                    disabled={isLoading}
+                  >
+                    Skip
+                  </Button>
                 </div>
               </>
             )}
@@ -270,7 +286,7 @@ export default function LinkedIn() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Step 4 of 4 • Final setup
+            Step 3 of 3 • Final setup
           </p>
         </div>
     </div>

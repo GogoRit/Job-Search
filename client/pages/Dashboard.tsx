@@ -2,22 +2,24 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { 
   BarChart3, 
   TrendingUp, 
   FileText, 
   Send, 
   Calendar,
-  Plus,
-  Eye,
-  Edit3,
-  MessageSquare,
   CheckCircle,
   Clock,
-  AlertCircle,
-  Users
+  Users,
+  Settings,
+  LogOut,
+  Eye,
+  Plus,
+  MessageSquare,
+  AlertCircle
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -121,18 +123,50 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function Dashboard() {
+  const { logout, state } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/login');
+  };
+
   return (
     <div className="p-8">
+      {/* Development Notice */}
+      <Card className="mb-6 border-blue-200 bg-blue-50">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-blue-900">Dashboard Under Development</h3>
+              <p className="text-sm text-blue-700">
+                This dashboard is currently being developed. Authentication and onboarding flow are complete.
+                Full dashboard features coming soon!
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Track your job applications and progress</p>
+          <p className="text-gray-600 mt-1">Welcome back, {state.user?.name || 'User'}!</p>
         </div>
-        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Job Application
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/settings')}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

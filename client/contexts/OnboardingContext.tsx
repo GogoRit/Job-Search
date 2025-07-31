@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 interface OnboardingState {
   apiKeySubmitted: boolean;
   resumeUploaded: boolean;
-  profileCompleted: boolean;
   linkedinEnabled: boolean;
   onboardingComplete: boolean;
 }
@@ -12,7 +11,6 @@ interface OnboardingContextType {
   state: OnboardingState;
   setApiKeySubmitted: (submitted: boolean) => void;
   setResumeUploaded: (uploaded: boolean) => void;
-  setProfileCompleted: (completed: boolean) => void;
   setLinkedinEnabled: (enabled: boolean) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
@@ -40,7 +38,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     return {
       apiKeySubmitted: false,
       resumeUploaded: false,
-      profileCompleted: false,
       linkedinEnabled: false,
       onboardingComplete: false,
     };
@@ -77,9 +74,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setState(prev => ({ ...prev, resumeUploaded: uploaded }));
   };
 
-  const setProfileCompleted = (completed: boolean) => {
-    setState(prev => ({ ...prev, profileCompleted: completed }));
-  };
+
 
   const setLinkedinEnabled = (enabled: boolean) => {
     setState(prev => ({ ...prev, linkedinEnabled: enabled }));
@@ -93,7 +88,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setState({
       apiKeySubmitted: false,
       resumeUploaded: false,
-      profileCompleted: false,
       linkedinEnabled: false,
       onboardingComplete: false,
     });
@@ -116,7 +110,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         state,
         setApiKeySubmitted,
         setResumeUploaded,
-        setProfileCompleted,
         setLinkedinEnabled,
         completeOnboarding,
         resetOnboarding,
@@ -146,9 +139,8 @@ export function useCanAccessApp() {
 export function useOnboardingStep() {
   const { state } = useOnboarding();
   
-  // Always allow access to API key page (users can update their key)
-  // Only redirect if they're not already on an onboarding page
-  
+  // Allow users to access the dashboard even if onboarding is incomplete
+  // They can complete missing steps from the homepage later
   if (!state.apiKeySubmitted) {
     return "/";
   }
@@ -157,11 +149,7 @@ export function useOnboardingStep() {
     return "/onboard/resume";
   }
   
-  if (!state.profileCompleted) {
-    return "/onboard/profile";
-  }
-  
-  if (!state.onboardingComplete) {
+  if (!state.linkedinEnabled) {
     return "/onboard/linkedin";
   }
   
@@ -177,10 +165,6 @@ export function useNextOnboardingStep() {
   }
   
   if (!state.resumeUploaded) {
-    return "/onboard/profile";
-  }
-  
-  if (!state.profileCompleted) {
     return "/onboard/linkedin";
   }
   

@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Eye, EyeOff, Key, Shield, CheckCircle } from "lucide-react";
 import { useOnboarding, useNextOnboardingStep } from "../../contexts/OnboardingContext";
+import { useAuthToken } from "../../contexts/AuthContext";
 
 export default function ApiKey() {
   const [apiKey, setApiKey] = useState("");
@@ -17,6 +18,7 @@ export default function ApiKey() {
   const navigate = useNavigate();
   const { setApiKeySubmitted, resetOnboarding } = useOnboarding();
   const nextStep = useNextOnboardingStep();
+  const token = useAuthToken();
 
   // Add a reset button for development/testing
   const handleReset = () => {
@@ -39,6 +41,7 @@ export default function ApiKey() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ api_key: apiKey }),
       });
@@ -60,7 +63,9 @@ export default function ApiKey() {
   };
 
   const handleSkip = () => {
-    // Don't mark as submitted when skipping - just navigate
+    // Mark API key as submitted (even if skipped) so user can complete it later
+    setApiKeySubmitted(true);
+    // Skip API key setup and go to next onboarding step
     navigate("/onboard/resume");
   };
 
@@ -164,7 +169,7 @@ export default function ApiKey() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Step 1 of 4 • Secure setup process
+            Step 1 of 3 • Secure setup process
           </p>
           <Button
             onClick={handleReset}

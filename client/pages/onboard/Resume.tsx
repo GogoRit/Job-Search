@@ -112,6 +112,13 @@ export default function Resume() {
         github_url: data.parsed_data?.github_url,
         years_experience: data.parsed_data?.years_experience
       };      setParsedData(transformedData);
+      
+      // Auto-continue after successful upload
+      setTimeout(() => {
+        setResumeUploaded(true);
+        navigate("/onboard/linkedin");
+      }, 2000); // Show success for 2 seconds then continue
+      
     } catch (err) {
       console.error('Resume upload error:', err);
       setError(`Failed to parse resume: ${err instanceof Error ? err.message : 'Please try again.'}`);
@@ -122,12 +129,14 @@ export default function Resume() {
 
   const handleContinue = () => {
     setResumeUploaded(true); // Only mark as uploaded when actually continuing with parsed data
-    navigate("/onboard/profile");
+    navigate("/onboard/linkedin");
   };
 
   const handleSkip = () => {
-    // Don't mark as uploaded when skipping - just navigate
-    navigate("/onboard/profile");
+    // Mark resume as uploaded (even if skipped) so user can complete it later
+    setResumeUploaded(true);
+    // Skip resume upload and go to next onboarding step
+    navigate("/onboard/linkedin");
   };
 
   return (
@@ -242,23 +251,11 @@ export default function Resume() {
 
                 <div className="text-center text-gray-600">
                   <p>Your resume has been successfully processed and parsed.</p>
-                  <p className="text-sm mt-2">Click "Continue to Profile Setup" to review and complete your profile.</p>
+                  <p className="text-sm mt-2">Redirecting to LinkedIn setup...</p>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/')}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleContinue}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    Continue to Profile Setup
-                  </Button>
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
               </div>
             )}
@@ -267,7 +264,7 @@ export default function Resume() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Step 2 of 4 • Resume parsing
+            Step 2 of 3 • Resume parsing
           </p>
         </div>
     </div>
